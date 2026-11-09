@@ -1,3 +1,3 @@
-# java-public-lib
+# core
 
-[Maven](./maven/index.md)
+Core library in Java.
