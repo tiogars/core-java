@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import fr.tiogars.core.creation.exceptions.CreationException;
+import fr.tiogars.core.creation.exceptions.DuplicateCreationException;
 import fr.tiogars.core.validation.services.ValidationService;
 
 /**
@@ -13,18 +15,31 @@ import fr.tiogars.core.validation.services.ValidationService;
  *
  * <p>Each creation follows the same pipeline:
  * {@link #prepare(Object) prepare} → validation by the
- * {@link ValidationService} →
+ * {@link ValidationService} → duplicate detection by
+ * {@link #findExisting(Object) findExisting} →
  * {@link #persist(Object) persist} → {@link #afterCreate(Object) afterCreate}.
  * Subclasses must implement {@link #persist(Object)} and may override the
  * other hooks.
  *
- * <p>Batch creation via {@link #createAll(Collection)} prepares and validates
- * every entity before persisting any of them: if a single entity is invalid,
- * nothing is persisted.
+ * <p>Two single-entity entry points share this pipeline:
+ * {@link #create(Object)} rejects an already existing entity with a
+ * {@link DuplicateCreationException}, while {@link #createIfAbsent(Object)}
+ * silently skips it and returns an empty optional.
+ *
+ * <p>Batch creation via {@link #createAll(Collection)} prepares, validates
+ * and checks every entity against the storage before persisting any of them:
+ * if a single entity is invalid or already exists, nothing is persisted.
+ *
+ * <p>The service is framework-agnostic: transaction management remains the
+ * responsibility of the consuming project (for example with a Spring
+ * {@code @Transactional} method delegating to this service).
  *
  * @param <T> type of the created entities
  */
 public abstract class CreationService<T> {
+
+    /** Violation message reported when an equivalent entity already exists. */
+    private static final String DUPLICATE_MESSAGE = "entity already exists";
 
     /** Service that validates entities before persistence. */
     private final ValidationService<? super T> validationService;
@@ -54,16 +69,51 @@ public abstract class CreationService<T> {
      * @return the created entity as returned by {@link #persist(Object)}
      * @throws NullPointerException if {@code entity} is {@code null}
      * @throws CreationException if the entity is invalid
-     * @throws IllegalStateException if {@link #prepare(Object)} or
-     *         {@link #persist(Object)} returns {@code null}
+     * @throws DuplicateCreationException if {@link #findExisting(Object)}
+     *         reports that an equivalent entity already exists
+     * @throws IllegalStateException if {@link #prepare(Object)},
+     *         {@link #persist(Object)} or {@link #findExisting(Object)}
+     *         returns {@code null}
      */
     public final T create(final T entity) {
         Objects.requireNonNull(entity, "entity must not be null");
         T prepared = requirePrepared(entity);
         rejectIfInvalid(validationService.validate(prepared));
+        if (requireExistingLookup(prepared).isPresent()) {
+            throw new DuplicateCreationException(
+                    List.of(DUPLICATE_MESSAGE));
+        }
         T created = requirePersisted(persist(prepared));
         afterCreate(created);
         return created;
+    }
+
+    /**
+     * Creates a single entity unless an equivalent entity already exists.
+     *
+     * <p>The pipeline is the same as {@link #create(Object)}, but an existing
+     * entity reported by {@link #findExisting(Object)} skips persistence and
+     * returns an empty optional instead of throwing.
+     *
+     * @param entity entity to create, must not be {@code null}
+     * @return the created entity, or an empty optional when an equivalent
+     *         entity already exists
+     * @throws NullPointerException if {@code entity} is {@code null}
+     * @throws CreationException if the entity is invalid
+     * @throws IllegalStateException if {@link #prepare(Object)},
+     *         {@link #persist(Object)} or {@link #findExisting(Object)}
+     *         returns {@code null}
+     */
+    public final Optional<T> createIfAbsent(final T entity) {
+        Objects.requireNonNull(entity, "entity must not be null");
+        T prepared = requirePrepared(entity);
+        rejectIfInvalid(validationService.validate(prepared));
+        if (requireExistingLookup(prepared).isPresent()) {
+            return Optional.empty();
+        }
+        T created = requirePersisted(persist(prepared));
+        afterCreate(created);
+        return Optional.of(created);
     }
 
     /**
@@ -71,8 +121,11 @@ public abstract class CreationService<T> {
      *
      * <p>All entities are prepared, then validated with
      * {@link ValidationService#validateAll(List)}; violations of the whole
-     * batch are reported in a single {@link CreationException}. Persistence
-     * only starts when the whole batch is valid.
+     * batch are reported in a single {@link CreationException}. Entities
+     * already present in the storage according to
+     * {@link #findExisting(Object)} are then reported together in a single
+     * {@link DuplicateCreationException}. Persistence only starts when the
+     * whole batch is valid and absent from the storage.
      *
      * @param entities entities to create, must not be {@code null} nor contain
      *        {@code null}
@@ -81,6 +134,8 @@ public abstract class CreationService<T> {
      * @throws NullPointerException if {@code entities} is {@code null} or
      *         contains {@code null}
      * @throws CreationException if at least one entity is invalid or duplicated
+     * @throws DuplicateCreationException if at least one entity already
+     *         exists in the storage
      * @throws IllegalStateException if a hook returns {@code null} or
      *         {@link #persistAll(List)} returns a list of a different size
      */
@@ -92,6 +147,7 @@ public abstract class CreationService<T> {
             prepared.add(requirePrepared(entity));
         }
         rejectIfInvalid(validationService.validateAll(prepared));
+        rejectExisting(prepared);
         if (prepared.isEmpty()) {
             return List.of();
         }
@@ -115,6 +171,23 @@ public abstract class CreationService<T> {
      */
     protected T prepare(final T entity) {
         return entity;
+    }
+
+    /**
+     * Looks up an equivalent entity already present in the storage, for
+     * example by business key. The default implementation returns an empty
+     * optional, which disables the duplicate check against the storage.
+     *
+     * <p>This check is distinct from
+     * {@link ValidationService#uniqueKey(Object)}, which only detects
+     * duplicates within the batch being created.
+     *
+     * @param entity prepared entity to look up, never {@code null}
+     * @return the existing equivalent entity, or an empty optional when the
+     *         entity can be created; must not be {@code null}
+     */
+    protected Optional<T> findExisting(final T entity) {
+        return Optional.empty();
     }
 
     /**
@@ -172,6 +245,39 @@ public abstract class CreationService<T> {
     private static void rejectIfInvalid(final List<String> violations) {
         if (!violations.isEmpty()) {
             throw new CreationException(violations);
+        }
+    }
+
+    /**
+     * Looks up an existing entity and enforces the non-null hook contract.
+     *
+     * @param prepared prepared entity to look up
+     * @return the lookup result
+     */
+    private Optional<T> requireExistingLookup(final T prepared) {
+        Optional<T> existing = findExisting(prepared);
+        if (existing == null) {
+            throw new IllegalStateException(
+                    "findExisting must not return null");
+        }
+        return existing;
+    }
+
+    /**
+     * Throws when at least one prepared entity of a batch already exists in
+     * the storage, reporting every duplicate with its zero-based index.
+     *
+     * @param prepared prepared entities of the batch
+     */
+    private void rejectExisting(final List<T> prepared) {
+        List<String> violations = new ArrayList<>();
+        for (int index = 0; index < prepared.size(); index++) {
+            if (requireExistingLookup(prepared.get(index)).isPresent()) {
+                violations.add("[" + index + "] " + DUPLICATE_MESSAGE);
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new DuplicateCreationException(violations);
         }
     }
 

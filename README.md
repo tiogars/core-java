@@ -7,8 +7,9 @@ Bibliothèque Java commune pour valider des entités et orchestrer leur créatio
 | Élément | Objectif |
 | --- | --- |
 | `fr.tiogars.core.validation.services.ValidationService<T>` | Appliquer des règles métier et détecter les doublons dans un lot. |
-| `CreationService<T>` | Enchaîner préparation, validation, persistance et traitement après création. |
+| `CreationService<T>` | Enchaîner préparation, validation, contrôle d'existant, persistance et traitement après création, avec `create`, `createIfAbsent` et `createAll`. |
 | `CreationException` | Restituer les violations qui empêchent la création. |
+| `DuplicateCreationException` | Signaler qu'une entité équivalente existe déjà dans le stockage. |
 
 Le [guide d'utilisation](docs/index.md) décrit chaque élément, ses limites et un exemple Java complet de création d'utilisateurs en mémoire.
 

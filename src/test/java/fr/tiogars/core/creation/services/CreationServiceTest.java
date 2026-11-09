@@ -7,14 +7,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import fr.tiogars.core.creation.exceptions.CreationException;
+import fr.tiogars.core.creation.exceptions.DuplicateCreationException;
 import fr.tiogars.core.validation.services.ValidationService;
 
-/** Verifies creation orchestration, validation and persistence contracts. */
+/**
+ * Verifies creation orchestration, validation, duplicate detection and
+ * persistence contracts.
+ */
 class CreationServiceTest {
 
     /**
@@ -92,6 +97,20 @@ class CreationServiceTest {
         }
 
         /**
+         * Looks up a stored item sharing the prepared name, emulating a
+         * repository lookup by business key.
+         *
+         * @param entity prepared item to look up
+         * @return the first stored item with the same name, if any
+         */
+        @Override
+        protected Optional<Item> findExisting(final Item entity) {
+            return store.stream()
+                    .filter(item -> item.name().equals(entity.name()))
+                    .findFirst();
+        }
+
+        /**
          * Records the notification emitted after successful persistence.
          *
          * @param created persisted item reported by the creation hook
@@ -125,6 +144,71 @@ class CreationServiceTest {
     @Test
     void createRejectsNull() {
         assertThrows(NullPointerException.class, () -> service.create(null));
+    }
+
+    /**
+     * Verifies that creating an item whose prepared name is already stored
+     * raises a duplicate exception without persisting or notifying again.
+     */
+    @Test
+    void createRejectsEntityAlreadyExisting() {
+        Item first = service.create(new Item(null, "alpha"));
+        Item duplicate = new Item(null, " alpha ");
+
+        DuplicateCreationException ex = assertThrows(
+                DuplicateCreationException.class,
+                () -> service.create(duplicate));
+
+        assertEquals(List.of("entity already exists"), ex.getViolations());
+        assertEquals(List.of(first), service.store);
+        assertEquals(List.of(first), service.notified);
+    }
+
+    /**
+     * Verifies that an absent item is created, stored and notified, and that
+     * the optional carries the persisted result.
+     */
+    @Test
+    void createIfAbsentCreatesWhenNoEquivalentExists() {
+        Optional<Item> created = service.createIfAbsent(
+                new Item(null, "  alpha "));
+
+        assertEquals(Optional.of(new Item(1L, "alpha")), created);
+        assertEquals(List.of(new Item(1L, "alpha")), service.store);
+        assertEquals(List.of(new Item(1L, "alpha")), service.notified);
+    }
+
+    /**
+     * Verifies that an already stored equivalent item skips persistence and
+     * notification and yields an empty optional instead of an exception.
+     */
+    @Test
+    void createIfAbsentReturnsEmptyWhenEntityAlreadyExists() {
+        Item first = service.create(new Item(null, "alpha"));
+
+        Optional<Item> result = service.createIfAbsent(
+                new Item(null, " alpha "));
+
+        assertTrue(result.isEmpty());
+        assertEquals(List.of(first), service.store);
+        assertEquals(List.of(first), service.notified);
+    }
+
+    /**
+     * Verifies that a null or invalid item is rejected by createIfAbsent
+     * before any duplicate lookup or persistence.
+     */
+    @Test
+    void createIfAbsentRejectsNullOrInvalidEntity() {
+        Item blankItem = new Item(null, "   ");
+
+        assertThrows(NullPointerException.class,
+                () -> service.createIfAbsent(null));
+        CreationException ex = assertThrows(CreationException.class,
+                () -> service.createIfAbsent(blankItem));
+
+        assertEquals(List.of("name is required"), ex.getViolations());
+        assertTrue(service.store.isEmpty());
     }
 
     /** Verifies blank names fail without persistence or notification. */
@@ -188,6 +272,64 @@ class CreationServiceTest {
         assertThrows(NullPointerException.class,
                 () -> service.createAll(itemsWithNull));
         assertTrue(service.store.isEmpty());
+    }
+
+    /**
+     * Verifies that a batch containing items already stored is rejected with
+     * indexed duplicate messages and without persisting the valid items.
+     */
+    @Test
+    void createAllRejectsEntitiesAlreadyExisting() {
+        Item first = service.create(new Item(null, "a"));
+        List<Item> batch = List.of(new Item(null, "b"), new Item(null, " a "));
+
+        DuplicateCreationException ex = assertThrows(
+                DuplicateCreationException.class,
+                () -> service.createAll(batch));
+
+        assertEquals(List.of("[1] entity already exists"),
+                ex.getViolations());
+        assertEquals(List.of(first), service.store);
+        assertEquals(List.of(first), service.notified);
+    }
+
+    /**
+     * Verifies that a null existing lookup result fails for the single,
+     * optional and batch entry points before any persistence.
+     */
+    @Test
+    void findExistingReturningNullIsRejected() {
+        CreationService<Item> broken = new CreationService<>() {
+            /**
+             * Supplies valid persistence for the lookup contract test double.
+             *
+             * @param entity item to return unchanged
+             * @return the supplied item
+             */
+            @Override
+            protected Item persist(final Item entity) {
+                return entity;
+            }
+
+            /**
+             * Simulates a lookup that violates the non-null result contract.
+             *
+             * @param entity item whose lookup is simulated
+             * @return null to trigger the lookup result guard
+             */
+            @Override
+            protected Optional<Item> findExisting(final Item entity) {
+                return null;
+            }
+        };
+
+        Item item = new Item(null, "a");
+        List<Item> items = List.of(item);
+        assertThrows(IllegalStateException.class, () -> broken.create(item));
+        assertThrows(IllegalStateException.class,
+                () -> broken.createIfAbsent(item));
+        assertThrows(IllegalStateException.class,
+                () -> broken.createAll(items));
     }
 
     /** Verifies null persistence results fail for single and batch calls. */
