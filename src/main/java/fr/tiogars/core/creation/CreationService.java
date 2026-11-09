@@ -1,9 +1,12 @@
-package fr.tiogars.core.services;
+package fr.tiogars.core.creation;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
+import fr.tiogars.core.creation.exceptions.CreationException;
+import fr.tiogars.core.validation.ValidationService;
 
 /**
  * Base service for creating entities, alone or in batch.
@@ -119,11 +122,7 @@ public abstract class CreationService<T> {
      * @return created entities in the same order and of the same size
      */
     protected List<T> persistAll(List<T> entities) {
-        List<T> created = new ArrayList<>(entities.size());
-        for (T entity : entities) {
-            created.add(persist(entity));
-        }
-        return created;
+        return entities.stream().map(this::persist).toList();
     }
 
     /**

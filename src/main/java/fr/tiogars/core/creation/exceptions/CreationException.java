@@ -1,7 +1,9 @@
-package fr.tiogars.core.services;
+package fr.tiogars.core.creation.exceptions;
 
 import java.util.List;
 import java.util.Objects;
+
+import fr.tiogars.core.creation.services.CreationService;
 
 /**
  * Thrown by {@link CreationService} when one or more entities cannot be created

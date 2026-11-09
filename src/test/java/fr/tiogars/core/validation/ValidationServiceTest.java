@@ -1,4 +1,4 @@
-package fr.tiogars.core.services;
+package fr.tiogars.core.validation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
