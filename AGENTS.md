@@ -68,6 +68,8 @@ Toute nouvelle implémentation ou modification de comportement doit être accomp
 - Nommer les classes de test `<NomDeClasse>Test`.
 - Vérifier le comportement observable, les cas limites pertinents et les erreurs attendues; éviter les tests qui ne font que répéter l'implémentation.
 - Pour un correctif, ajouter un test qui échoue avant le correctif lorsque cela est possible.
+- À chaque itération qui ajoute ou modifie du code, augmenter la couverture des comportements du périmètre touché en testant les nouveaux chemins, les cas limites et les branches d'erreur pertinentes; ne pas ajouter de tests sans valeur uniquement pour gonfler un pourcentage.
+- Lorsqu'un outil de couverture est configuré, consulter son rapport, comparer la couverture du code modifié et éviter toute régression non justifiée. En l'absence de mesure configurée, ne pas annoncer de pourcentage: vérifier les scénarios ajoutés et signaler cette limite dans le bilan. Ne pas imposer de seuil global arbitraire.
 - Corriger toute nouvelle erreur de compilation détectée après une modification avant de conclure; ne pas la laisser de côté au seul motif qu'un autre contrôle passe.
 - Si les diagnostics de l'éditeur contredisent le build Maven, vérifier avec un build propre et traiter les diagnostics résiduels comme potentiellement périmés jusqu'à leur actualisation ou confirmation.
 - Exécuter `mvn test` après les changements de code et de tests. Exécuter `mvn clean package` pour la validation complète avant de conclure.
