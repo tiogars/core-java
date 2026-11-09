@@ -1,0 +1,66 @@
+name: Release Maven Version Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'Nouvelle version à appliquer'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'maven'
+
+      - name: Change Maven version
+        run: mvn versions:set -DnewVersion=${{ github.event.inputs.new_version }}
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add pom.xml
+          git commit -m "Bump version to ${{ github.event.inputs.new_version }}"
+          git push
+
+      - name: Create and push tag
+        run: |
+          TAG="${{ github.event.inputs.new_version }}"
+          git tag $TAG
+          git push origin $TAG
+
+      - name: Publish to GitHub Packages
+        run: mvn --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          TAG="${{ github.event.inputs.new_version }}"
+          gh release create "$TAG" --title "$TAG" --notes "Release $TAG"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump to next snapshot version
+        run: mvn versions:set -DnewVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | awk -F. '{print $1"."$2"."$3+1"-SNAPSHOT"}')
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add pom.xml
+          git commit -m "Prepare next development version"
+          git push
