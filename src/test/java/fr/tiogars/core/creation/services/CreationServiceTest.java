@@ -81,7 +81,8 @@ class CreationServiceTest {
 
     @Test
     void createRejectsInvalidEntityWithoutPersisting() {
-        CreationException ex = assertThrows(CreationException.class, () -> service.create(new Item(null, "   ")));
+        Item invalidItem = new Item(null, "   ");
+        CreationException ex = assertThrows(CreationException.class, () -> service.create(invalidItem));
 
         assertEquals(List.of("name is required"), ex.getViolations());
         assertTrue(service.store.isEmpty());
@@ -91,10 +92,11 @@ class CreationServiceTest {
     @Test
     void createAllCreatesEveryEntityInOrder() {
         List<Item> created = service.createAll(List.of(new Item(null, "a"), new Item(null, "b")));
+        Item additionalItem = new Item(null, "c");
 
         assertEquals(List.of(new Item(1L, "a"), new Item(2L, "b")), created);
         assertEquals(created, service.notified);
-        assertThrows(UnsupportedOperationException.class, () -> created.add(new Item(null, "c")));
+        assertThrows(UnsupportedOperationException.class, () -> created.add(additionalItem));
     }
 
     @Test
@@ -119,8 +121,9 @@ class CreationServiceTest {
 
     @Test
     void createAllRejectsNullCollectionOrElement() {
+        List<Item> itemsWithNull = Arrays.asList(new Item(null, "a"), null);
         assertThrows(NullPointerException.class, () -> service.createAll(null));
-        assertThrows(NullPointerException.class, () -> service.createAll(Arrays.asList(new Item(null, "a"), null)));
+        assertThrows(NullPointerException.class, () -> service.createAll(itemsWithNull));
         assertTrue(service.store.isEmpty());
     }
 
@@ -133,8 +136,10 @@ class CreationServiceTest {
             }
         };
 
-        assertThrows(IllegalStateException.class, () -> broken.create(new Item(null, "a")));
-        assertThrows(IllegalStateException.class, () -> broken.createAll(List.of(new Item(null, "a"))));
+        Item item = new Item(null, "a");
+        List<Item> items = List.of(item);
+        assertThrows(IllegalStateException.class, () -> broken.create(item));
+        assertThrows(IllegalStateException.class, () -> broken.createAll(items));
     }
 
     @Test
@@ -151,7 +156,8 @@ class CreationServiceTest {
             }
         };
 
-        assertThrows(IllegalStateException.class, () -> broken.createAll(List.of(new Item(null, "a"))));
+        List<Item> items = List.of(new Item(null, "a"));
+        assertThrows(IllegalStateException.class, () -> broken.createAll(items));
     }
 
     @Test

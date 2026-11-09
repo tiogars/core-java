@@ -49,7 +49,8 @@ class ValidationServiceTest {
     @Test
     void validateAllRejectsNullListOrElement() {
         assertThrows(NullPointerException.class, () -> service.validateAll(null));
-        assertThrows(NullPointerException.class, () -> service.validateAll(Arrays.asList("a", null)));
+        List<String> entitiesWithNull = Arrays.asList("a", null);
+        assertThrows(NullPointerException.class, () -> service.validateAll(entitiesWithNull));
     }
 
     @Test
