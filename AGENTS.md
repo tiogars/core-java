@@ -68,6 +68,7 @@ Toute nouvelle implémentation ou modification de comportement doit être accomp
 
 - Placer les tests sous `src/test/java/` en reproduisant le package de la classe testée.
 - Nommer les classes de test `<NomDeClasse>Test`.
+- À chaque itération, documenter dans le code tous les éléments de test ajoutés ou modifiés, quelle que soit leur visibilité : packages, classes (y compris imbriquées), records et leurs composants, champs, constructeurs, méthodes de test, méthodes de cycle de vie, méthodes auxiliaires et redéfinitions dans les doublures ou classes anonymes. Utiliser une Javadoc concise décrivant le rôle de chaque élément et, pour chaque scénario, les conditions exercées et le résultat ou l'erreur attendu; documenter les paramètres et retours utiles. Maintenir ces commentaires en cohérence avec les assertions et le comportement réellement vérifié. Les noms explicites et les annotations JUnit ne remplacent pas ces commentaires; commenter aussi les blocs non évidents sans paraphraser chaque instruction.
 - Vérifier le comportement observable, les cas limites pertinents et les erreurs attendues; éviter les tests qui ne font que répéter l'implémentation.
 - Pour un correctif, ajouter un test qui échoue avant le correctif lorsque cela est possible.
 - À chaque itération qui ajoute ou modifie du code, augmenter la couverture des comportements du périmètre touché en testant les nouveaux chemins, les cas limites et les branches d'erreur pertinentes; ne pas ajouter de tests sans valeur uniquement pour gonfler un pourcentage.
