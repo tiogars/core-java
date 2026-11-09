@@ -6,7 +6,7 @@ Bibliothèque Java commune pour valider des entités et orchestrer leur créatio
 
 | Élément | Objectif |
 | --- | --- |
-| `ValidationService<T>` | Appliquer des règles métier et détecter les doublons dans un lot. |
+| `fr.tiogars.core.validation.services.ValidationService<T>` | Appliquer des règles métier et détecter les doublons dans un lot. |
 | `CreationService<T>` | Enchaîner préparation, validation, persistance et traitement après création. |
 | `CreationException` | Restituer les violations qui empêchent la création. |
 

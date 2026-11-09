@@ -6,7 +6,7 @@ Cette bibliothèque fournit des briques réutilisables de validation et de créa
 
 | Type à importer | Objectif | Quand l'utiliser |
 | --- | --- | --- |
-| `fr.tiogars.core.validation.ValidationService<T>` | Centraliser les règles métier et les contrôles de doublons. | Vérifier une entité ou un lot, même sans création. |
+| `fr.tiogars.core.validation.services.ValidationService<T>` | Centraliser les règles métier et les contrôles de doublons. | Vérifier une entité ou un lot, même sans création. |
 | `fr.tiogars.core.creation.services.CreationService<T>` | Orchestrer le cycle de création en déléguant la validation. | Partager un même enchaînement entre créations unitaires et par lots. |
 | `fr.tiogars.core.creation.exceptions.CreationException` | Transporter les messages de rejet d'une création. | Présenter les violations au consommateur sans analyser un message d'exception. |
 
@@ -33,7 +33,7 @@ Ce programme est complet et ne dépend que de la bibliothèque et du JDK. Enregi
 ```java
 import java.util.List;
 
-import fr.tiogars.core.validation.ValidationService;
+import fr.tiogars.core.validation.services.ValidationService;
 
 public class ValidationExample {
     public static void main(String[] args) {
@@ -94,7 +94,7 @@ import java.util.Locale;
 
 import fr.tiogars.core.creation.exceptions.CreationException;
 import fr.tiogars.core.creation.services.CreationService;
-import fr.tiogars.core.validation.ValidationService;
+import fr.tiogars.core.validation.services.ValidationService;
 
 public class CreationExample {
     record User(Long id, String email) {}
@@ -193,7 +193,7 @@ Le constructeur `CreationException(List<String>)` permet aussi de construire ce 
 
 ## Compatibilité des imports
 
-Les exemples utilisent `fr.tiogars.core.creation.services.CreationService`, `fr.tiogars.core.creation.exceptions.CreationException` et `fr.tiogars.core.validation.ValidationService`. Si un projet utilisait les anciens types du package `fr.tiogars.core.services`, mettre à jour ses imports et le recompiler après le déplacement des types.
+Les exemples utilisent `fr.tiogars.core.creation.services.CreationService`, `fr.tiogars.core.creation.exceptions.CreationException` et `fr.tiogars.core.validation.services.ValidationService`. Le déplacement de `ValidationService` depuis `fr.tiogars.core.validation` vers `fr.tiogars.core.validation.services` modifie son nom pleinement qualifié et constitue une rupture de compatibilité source et binaire. Les projets consommateurs doivent remplacer l'ancien import `fr.tiogars.core.validation.ValidationService` par `fr.tiogars.core.validation.services.ValidationService`, puis recompiler.
 
 ## Couverture de code
 

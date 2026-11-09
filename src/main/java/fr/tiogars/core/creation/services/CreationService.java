@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import fr.tiogars.core.creation.exceptions.CreationException;
-import fr.tiogars.core.validation.ValidationService;
+import fr.tiogars.core.validation.services.ValidationService;
 
 /**
  * Base service for creating entities, alone or in batch.

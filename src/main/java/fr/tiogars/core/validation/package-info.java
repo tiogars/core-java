@@ -1,2 +1,2 @@
-/** Validation rules and batch duplicate detection for entities. */
+/** Validation domain for entity rules and batch duplicate detection. */
 package fr.tiogars.core.validation;

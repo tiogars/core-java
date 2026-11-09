@@ -1,4 +1,4 @@
-package fr.tiogars.core.validation;
+package fr.tiogars.core.validation.services;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import fr.tiogars.core.creation.exceptions.CreationException;
-import fr.tiogars.core.validation.ValidationService;
+import fr.tiogars.core.validation.services.ValidationService;
 
 /** Verifies creation orchestration, validation and persistence contracts. */
 class CreationServiceTest {
