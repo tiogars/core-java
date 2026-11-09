@@ -194,3 +194,19 @@ Le constructeur `CreationException(List<String>)` permet aussi de construire ce 
 ## Compatibilité des imports
 
 Les exemples utilisent `fr.tiogars.core.creation.services.CreationService`, `fr.tiogars.core.creation.exceptions.CreationException` et `fr.tiogars.core.validation.ValidationService`. Si un projet utilisait les anciens types du package `fr.tiogars.core.services`, mettre à jour ses imports et le recompiler après le déplacement des types.
+
+## Couverture de code
+
+JaCoCo mesure la couverture des classes de production par les tests unitaires, sans modifier l'API ni ajouter de dépendance à la bibliothèque distribuée. L'agent est préparé avant les tests; le rapport est généré après leur exécution pendant la phase `test`.
+
+Pour obtenir une mesure propre et le site Maven complet :
+
+```shell
+mvn clean test site
+```
+
+Ouvrir `target/site/index.html`, puis le rapport **JaCoCo** dans les rapports du projet, ou ouvrir directement `target/site/jacoco/index.html`. Le rapport permet de naviguer par package, classe et source pour inspecter les instructions, lignes, branches et méthodes couvertes ou manquées. Les fichiers `target/site/jacoco/jacoco.xml` et `target/site/jacoco/jacoco.csv` contiennent les mesures exploitables par d'autres outils.
+
+Pour une itération locale, `mvn test` actualise également le rapport. Utiliser `mvn clean test` pour éviter de conserver des classes ou des données de couverture d'une exécution précédente. Avant les modifications, relever les compteurs des classes concernées et conserver cette référence hors de `target`, car `clean` supprime ce répertoire. Après les modifications, comparer les lignes et branches couvertes ou manquées, compléter les tests des nouveaux chemins et expliquer toute régression justifiée dans le bilan. Aucun seuil global bloquant n'est configuré; le pourcentage global ne remplace pas l'examen du code modifié.
+
+`mvn clean site` seul n'exécute pas les tests et ne produit donc pas de rapport de couverture après nettoyage. Si JaCoCo signale l'absence de données d'exécution ou si le rapport manque, relancer `mvn clean test site` sans désactiver les tests ni l'agent. Un échec des tests doit être corrigé avant de considérer le rapport comme validé. Le workflow GitHub Pages exécute aussi les tests avant de publier le site et sa couverture.

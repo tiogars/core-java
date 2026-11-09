@@ -9,9 +9,10 @@ Ce dépôt contient une bibliothèque Java commune destinée à être réutilis�
 - Java cible : 25, configuré dans `pom.xml`.
 - Build : Maven, sans wrapper présent dans le dépôt.
 - Exécuter les tests unitaires : `mvn test`.
+- Produire une mesure propre de couverture JaCoCo : `mvn clean test`; consulter `target/site/jacoco/index.html`.
 - Analyser le style des sources et des tests : `mvn checkstyle:check`.
 - Vérifier le build complet avant de terminer une implémentation : `mvn clean package`.
-- Générer le site de documentation si la demande le concerne : `mvn clean site`.
+- Générer le site de documentation avec la couverture si la demande le concerne : `mvn clean test site`. `mvn clean site` seul ne collecte pas de couverture.
 
 Ne pas déclarer une vérification réussie si la commande n'a pas été exécutée. Si une commande ne peut pas être lancée, le signaler clairement.
 
@@ -73,7 +74,7 @@ Toute nouvelle implémentation ou modification de comportement doit être accomp
 - Pour un correctif, ajouter un test qui échoue avant le correctif lorsque cela est possible.
 - À chaque itération qui ajoute ou modifie du code, augmenter la couverture des comportements du périmètre touché en testant les nouveaux chemins, les cas limites et les branches d'erreur pertinentes; ne pas ajouter de tests sans valeur uniquement pour gonfler un pourcentage.
 - À chaque itération qui ajoute ou modifie du code, exécuter `mvn checkstyle:check` et corriger toutes les violations signalées avant de poursuivre; l'analyse couvre les sources de production et de test.
-- Lorsqu'un outil de couverture est configuré, consulter son rapport, comparer la couverture du code modifié et éviter toute régression non justifiée. En l'absence de mesure configurée, ne pas annoncer de pourcentage: vérifier les scénarios ajoutés et signaler cette limite dans le bilan. Ne pas imposer de seuil global arbitraire.
+- À chaque itération qui ajoute ou modifie du code ou des tests, exécuter `mvn clean test` avant les changements pour relever la couverture JaCoCo des classes concernées (lignes et branches couvertes et manquées); conserver cette référence hors de `target`, supprimé par `clean`. Après les changements, régénérer le rapport avec la même commande et comparer les compteurs dans `target/site/jacoco/index.html` ou `target/site/jacoco/jacoco.xml`. Couvrir les nouveaux chemins et corriger toute régression non justifiée; expliquer explicitement les exceptions dans le bilan. Si le code a déjà changé avant le relevé initial, signaler l'absence de référence sans annuler les modifications existantes. Ne pas imposer de seuil global arbitraire, exclure du code ou désactiver l'agent pour masquer une baisse. Un rapport absent, périmé ou issu de tests désactivés ne valide pas la couverture. Dans le bilan, indiquer les commandes réellement exécutées, la couverture observée sur le périmètre touché et les limites éventuelles de la comparaison.
 - À chaque itération, traiter les alertes SonarQube pertinentes sur le code ajouté ou modifié. Pour une alerte indiquant qu'une lambda de test peut contenir plusieurs appels susceptibles de lever une exception d'exécution (par exemple avec `assertThrows`), préparer les données et effectuer les appels auxiliaires avant la lambda, afin qu'elle ne contienne que l'opération dont l'exception est vérifiée; ne pas supprimer ou masquer l'alerte pour la contourner.
 - Corriger toute nouvelle erreur de compilation détectée après une modification avant de conclure; ne pas la laisser de côté au seul motif qu'un autre contrôle passe.
 - Si les diagnostics de l'éditeur contredisent le build Maven, vérifier avec un build propre et traiter les diagnostics résiduels comme potentiellement périmés jusqu'à leur actualisation ou confirmation.
@@ -94,5 +95,5 @@ Toute nouvelle implémentation ou modification de comportement doit être accomp
 - Donner un exemple concret d'utilisation pour chaque élément, ou le référencer dans un exemple partagé qui montre explicitement son rôle. Inclure les imports, les types et les dépendances nécessaires, ainsi que le résultat attendu; éviter les dépôts ou méthodes fictifs non définis.
 - Documenter au moins le parcours nominal et une erreur représentative lorsque l'élément peut échouer. Distinguer les garanties réelles des responsabilités laissées au projet consommateur.
 - Centraliser les exemples détaillés dans [docs/index.md](docs/index.md), maintenir un aperçu et un lien depuis [README.md](README.md), et garder les Javadoc cohérentes avec ces documents.
-- Vérifier les exemples Java contre l'API actuelle (compilation, puis exécution ou test quand possible), les imports, les liens locaux et les résultats annoncés. Exécuter `mvn clean site` pour une modification de la documentation publiée et signaler toute vérification impossible.
+- Vérifier les exemples Java contre l'API actuelle (compilation, puis exécution ou test quand possible), les imports, les liens locaux et les résultats annoncés. Exécuter `mvn clean test site` pour une modification de la documentation publiée, vérifier la présence du rapport JaCoCo dans le site et signaler toute vérification impossible.
 - Lors d'un déplacement ou d'une rupture d'API, actualiser les exemples et expliquer les adaptations nécessaires aux consommateurs. Ne pas publier un comportement prévu mais non implémenté comme une fonctionnalité disponible.

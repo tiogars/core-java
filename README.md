@@ -39,10 +39,10 @@ Cette procédure utilise le dépôt Maven local et ne nécessite pas de configur
 ```shell
 mvn test
 mvn clean package
-mvn clean site
+mvn clean test site
 ```
 
-Le site Maven inclut les pages navigables des sources Java et des tests (`Source Xref` et `Test Source Xref`).
+Le site Maven inclut les pages navigables des sources Java et des tests (`Source Xref` et `Test Source Xref`), ainsi que le rapport de couverture JaCoCo dans `target/site/jacoco/index.html`. Les tests doivent précéder `site` pour collecter la couverture; `mvn clean site` seul ne la produit pas. `mvn test` produit également le rapport local. Consulter le [guide de couverture](docs/index.md#couverture-de-code) pour son utilisation à chaque itération.
 
 Le workflow [Deploy Maven Site to GitHub Pages](.github/workflows/maven-site.yml) publie le site Maven lors d'un push sur `main` ou d'un lancement manuel. Il transmet `target/site` aux actions officielles GitHub Pages, puis le déploie dans l'environnement `github-pages`, sans utiliser de branche `gh-pages`. Dans les paramètres Pages du dépôt, la source doit être **GitHub Actions**. Si la génération du site échoue, le déploiement n'est pas lancé.
 
