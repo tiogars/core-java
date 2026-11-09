@@ -1,21 +1,25 @@
-name: Deploy Maven Site to GitHub Pages with gh
+name: Deploy Maven Site to GitHub Pages
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-jobs:
-  build-deploy:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -23,21 +27,27 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Build and generate Maven site
         run: mvn clean site
-   
-      - name: Publish site to gh-pages branch
-        run: |
-          gh repo clone ${{ github.repository }} repo-tmp
-          cd repo-tmp
-          git checkout gh-pages || git checkout --orphan gh-pages
-          rm -rf *
-          cp -r ../target/site/* .
-          git add .
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git commit -m "Deploy Maven site"
-          git push origin gh-pages --force
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
