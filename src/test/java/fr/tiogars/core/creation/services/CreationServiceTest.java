@@ -213,6 +213,69 @@ class CreationServiceTest {
                 () -> broken.createAll(items));
     }
 
+    /** Verifies that a preparation hook cannot return null. */
+    @Test
+    void prepareReturningNullIsRejected() {
+        CreationService<Item> broken = new CreationService<>() {
+            /**
+             * Simulates preparation that violates the non-null hook contract.
+             *
+             * @param entity item whose preparation is simulated
+             * @return null to trigger the preparation result guard
+             */
+            @Override
+            protected Item prepare(final Item entity) {
+                return null;
+            }
+
+            /**
+             * Supplies the persistence hook required for the test service.
+             *
+             * @param entity item to return unchanged
+             * @return the supplied item
+             */
+            @Override
+            protected Item persist(final Item entity) {
+                return entity;
+            }
+        };
+
+        Item item = new Item(null, "a");
+        assertThrows(IllegalStateException.class, () -> broken.create(item));
+    }
+
+    /** Verifies that batch persistence cannot return a null result list. */
+    @Test
+    void persistAllReturningNullIsRejected() {
+        CreationService<Item> broken = new CreationService<>() {
+            /**
+             * Supplies valid single-item persistence for the batch test double.
+             *
+             * @param entity item to return unchanged
+             * @return the supplied item
+             */
+            @Override
+            protected Item persist(final Item entity) {
+                return entity;
+            }
+
+            /**
+             * Simulates batch persistence that violates its result contract.
+             *
+             * @param entities non-empty batch whose persistence is simulated
+             * @return null to trigger the batch result guard
+             */
+            @Override
+            protected List<Item> persistAll(final List<Item> entities) {
+                return null;
+            }
+        };
+
+        List<Item> items = List.of(new Item(null, "a"));
+        assertThrows(IllegalStateException.class,
+                () -> broken.createAll(items));
+    }
+
     /** Verifies that a batch persistence result must match the input size. */
     @Test
     void persistAllReturningWrongSizeIsRejected() {
