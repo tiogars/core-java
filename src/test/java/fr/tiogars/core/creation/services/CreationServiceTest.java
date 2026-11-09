@@ -172,13 +172,13 @@ class CreationServiceTest {
 
     @Test
     void defaultHooksAcceptEntityAsIs() {
-        CreationService<String> service = new CreationService<>() {
+        CreationService<String> defaultService = new CreationService<>() {
             @Override
             protected String persist(String entity) {
                 return entity;
             }
         };
 
-        assertEquals(List.of("x", "x"), service.createAll(List.of("x", "x")));
+        assertEquals(List.of("x", "x"), defaultService.createAll(List.of("x", "x")));
     }
 }
