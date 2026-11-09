@@ -11,8 +11,10 @@ import fr.tiogars.core.creation.services.CreationService;
  */
 public class CreationException extends RuntimeException {
 
+    /** Serialization version identifier. */
     private static final long serialVersionUID = 1L;
 
+    /** Immutable violation messages associated with this exception. */
     private final List<String> violations;
 
     /**

@@ -20,6 +20,7 @@ Ne pas déclarer une vérification réussie si la commande n'a pas été exécut
 - Garder les responsabilités séparées; placer la logique métier dans les services seulement lorsqu'elle correspond réellement à ce rôle.
 - Utiliser les conventions Java et le style déjà présents dans le fichier ou le package concerné.
 - Documenter les types et méthodes publics avec Javadoc, notamment leur contrat et les cas limites utiles aux consommateurs de la bibliothèque.
+- À chaque itération qui ajoute ou modifie du code, commenter chaque membre privé ajouté ou modifié avec une explication concise de son rôle.
 - Ajouter une dépendance uniquement si elle apporte une valeur nécessaire à la bibliothèque commune; privilégier les dépendances existantes ou le JDK pour les besoins simples.
 
 ## Conception et découpage des services
