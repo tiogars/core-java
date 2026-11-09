@@ -9,6 +9,7 @@ Ce dépôt contient une bibliothèque Java commune destinée à être réutilis�
 - Java cible : 25, configuré dans `pom.xml`.
 - Build : Maven, sans wrapper présent dans le dépôt.
 - Exécuter les tests unitaires : `mvn test`.
+- Analyser le style des sources et des tests : `mvn checkstyle:check`.
 - Vérifier le build complet avant de terminer une implémentation : `mvn clean package`.
 - Générer le site de documentation si la demande le concerne : `mvn clean site`.
 
@@ -70,6 +71,7 @@ Toute nouvelle implémentation ou modification de comportement doit être accomp
 - Vérifier le comportement observable, les cas limites pertinents et les erreurs attendues; éviter les tests qui ne font que répéter l'implémentation.
 - Pour un correctif, ajouter un test qui échoue avant le correctif lorsque cela est possible.
 - À chaque itération qui ajoute ou modifie du code, augmenter la couverture des comportements du périmètre touché en testant les nouveaux chemins, les cas limites et les branches d'erreur pertinentes; ne pas ajouter de tests sans valeur uniquement pour gonfler un pourcentage.
+- À chaque itération qui ajoute ou modifie du code, exécuter `mvn checkstyle:check` et corriger toutes les violations signalées avant de poursuivre; l'analyse couvre les sources de production et de test.
 - Lorsqu'un outil de couverture est configuré, consulter son rapport, comparer la couverture du code modifié et éviter toute régression non justifiée. En l'absence de mesure configurée, ne pas annoncer de pourcentage: vérifier les scénarios ajoutés et signaler cette limite dans le bilan. Ne pas imposer de seuil global arbitraire.
 - À chaque itération, traiter les alertes SonarQube pertinentes sur le code ajouté ou modifié. Pour une alerte indiquant qu'une lambda de test peut contenir plusieurs appels susceptibles de lever une exception d'exécution (par exemple avec `assertThrows`), préparer les données et effectuer les appels auxiliaires avant la lambda, afin qu'elle ne contienne que l'opération dont l'exception est vérifiée; ne pas supprimer ou masquer l'alerte pour la contourner.
 - Corriger toute nouvelle erreur de compilation détectée après une modification avant de conclure; ne pas la laisser de côté au seul motif qu'un autre contrôle passe.

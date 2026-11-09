@@ -3,11 +3,11 @@ package fr.tiogars.core.creation.exceptions;
 import java.util.List;
 import java.util.Objects;
 
-import fr.tiogars.core.creation.services.CreationService;
-
 /**
- * Thrown by {@link CreationService} when one or more entities cannot be created
- * because they are invalid. No entity is persisted when this exception is thrown.
+ * Thrown by
+ * {@link fr.tiogars.core.creation.services.CreationService} when one or more
+ * entities cannot be created because they are invalid. No entity is persisted
+ * when this exception is thrown.
  */
 public class CreationException extends RuntimeException {
 
@@ -20,11 +20,13 @@ public class CreationException extends RuntimeException {
     /**
      * Creates an exception carrying the given violations.
      *
-     * @param violations violation messages, must not be {@code null} nor contain {@code null}
+     * @param violationMessages violation messages, must not be {@code null} nor
+     *        contain {@code null}
      */
-    public CreationException(List<String> violations) {
-        super("Creation rejected: " + String.join("; ", Objects.requireNonNull(violations, "violations must not be null")));
-        this.violations = List.copyOf(violations);
+    public CreationException(final List<String> violationMessages) {
+        super("Creation rejected: " + String.join("; ", Objects.requireNonNull(
+                violationMessages, "violations must not be null")));
+        this.violations = List.copyOf(violationMessages);
     }
 
     /**

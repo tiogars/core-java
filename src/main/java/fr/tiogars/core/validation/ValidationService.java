@@ -21,25 +21,29 @@ public class ValidationService<T> {
      * Validates a single entity.
      *
      * @param entity entity to validate, must not be {@code null}
-     * @return an unmodifiable list of violations; empty when the entity is valid
+     * @return an unmodifiable list of violations; empty when valid
      * @throws NullPointerException if {@code entity} is {@code null}
      */
-    public final List<String> validate(T entity) {
+    public final List<String> validate(final T entity) {
         Objects.requireNonNull(entity, "entity must not be null");
         List<String> violations = check(entity);
         return violations == null ? List.of() : List.copyOf(violations);
     }
 
     /**
-     * Validates a batch. Each violation is prefixed with the zero-based index of
-     * its entity (for example {@code "[2] name is required"}), and entities sharing
-     * the same non-null {@link #uniqueKey(Object)} are reported as duplicates.
+     * Validates a batch. Each violation is prefixed with the zero-based index
+     * of its entity (for example {@code "[2] name is required"}); entities
+     * sharing the same non-null {@link #uniqueKey(Object)} are reported as
+     * duplicates.
      *
-     * @param entities entities to validate, must not be {@code null} nor contain {@code null}
-     * @return an unmodifiable list of violations for the whole batch; empty when all entities are valid
-     * @throws NullPointerException if {@code entities} is {@code null} or contains {@code null}
+     * @param entities entities to validate, must not be {@code null} nor
+     *        contain {@code null}
+     * @return an unmodifiable list of violations for the whole batch; empty
+     *         when all entities are valid
+     * @throws NullPointerException if {@code entities} is {@code null} or
+     *         contains {@code null}
      */
-    public final List<String> validateAll(List<? extends T> entities) {
+    public final List<String> validateAll(final List<? extends T> entities) {
         Objects.requireNonNull(entities, "entities must not be null");
         List<String> violations = new ArrayList<>();
         Map<Object, Integer> firstIndexByKey = new HashMap<>();
@@ -52,7 +56,8 @@ public class ValidationService<T> {
             if (key != null) {
                 Integer first = firstIndexByKey.putIfAbsent(key, index);
                 if (first != null) {
-                    violations.add("[" + index + "] duplicate of entity at index " + first);
+                        violations.add("[" + index + "] duplicate of entity "
+                            + "at index " + first);
                 }
             }
         }
@@ -60,12 +65,13 @@ public class ValidationService<T> {
     }
 
     /**
-     * Applies the validation rules to an entity. Default implementation accepts every entity.
+     * Applies the validation rules to an entity. The default implementation
+     * accepts every entity.
      *
      * @param entity entity to check, never {@code null}
-     * @return violation messages; empty or {@code null} when the entity is valid
+     * @return violation messages; empty or {@code null} when valid
      */
-    protected List<String> check(T entity) {
+    protected List<String> check(final T entity) {
         return List.of();
     }
 
@@ -74,9 +80,10 @@ public class ValidationService<T> {
      * Default implementation returns {@code null}, which disables the check.
      *
      * @param entity entity, never {@code null}
-     * @return the key, compared with {@code equals}/{@code hashCode}, or {@code null} to skip the check
+     * @return the key, compared with {@code equals}/{@code hashCode}, or
+     *         {@code null} to skip the check
      */
-    protected Object uniqueKey(T entity) {
+    protected Object uniqueKey(final T entity) {
         return null;
     }
 }

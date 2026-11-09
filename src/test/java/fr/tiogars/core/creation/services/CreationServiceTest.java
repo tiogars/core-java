@@ -21,43 +21,49 @@ class CreationServiceTest {
 
     static class ItemValidationService extends ValidationService<Item> {
         @Override
-        protected List<String> check(Item entity) {
-            return entity.name() == null || entity.name().isEmpty() ? List.of("name is required") : List.of();
+        protected List<String> check(final Item entity) {
+            return entity.name() == null || entity.name().isEmpty()
+                    ? List.of("name is required") : List.of();
         }
 
         @Override
-        protected Object uniqueKey(Item entity) {
+        protected Object uniqueKey(final Item entity) {
             return entity.name();
         }
     }
 
     static class ItemCreationService extends CreationService<Item> {
-        final List<Item> store = new ArrayList<>();
-        final List<Item> notified = new ArrayList<>();
-        long sequence = 0;
+        /** Entities persisted by this test service. */
+        private final List<Item> store = new ArrayList<>();
+        /** Entities reported by the creation hook. */
+        private final List<Item> notified = new ArrayList<>();
+        /** Next generated test identifier. */
+        private long sequence;
 
         ItemCreationService() {
             super(new ItemValidationService());
         }
 
         @Override
-        protected Item prepare(Item entity) {
-            return new Item(entity.id(), entity.name() == null ? null : entity.name().trim());
+        protected Item prepare(final Item entity) {
+            return new Item(entity.id(),
+                    entity.name() == null ? null : entity.name().trim());
         }
 
         @Override
-        protected Item persist(Item entity) {
+        protected Item persist(final Item entity) {
             Item created = new Item(++sequence, entity.name());
             store.add(created);
             return created;
         }
 
         @Override
-        protected void afterCreate(Item created) {
+        protected void afterCreate(final Item created) {
             notified.add(created);
         }
     }
 
+    /** Service instance reused by each test. */
     private ItemCreationService service;
 
     @BeforeEach
@@ -82,7 +88,8 @@ class CreationServiceTest {
     @Test
     void createRejectsInvalidEntityWithoutPersisting() {
         Item invalidItem = new Item(null, "   ");
-        CreationException ex = assertThrows(CreationException.class, () -> service.create(invalidItem));
+        CreationException ex = assertThrows(CreationException.class,
+                () -> service.create(invalidItem));
 
         assertEquals(List.of("name is required"), ex.getViolations());
         assertTrue(service.store.isEmpty());
@@ -91,12 +98,14 @@ class CreationServiceTest {
 
     @Test
     void createAllCreatesEveryEntityInOrder() {
-        List<Item> created = service.createAll(List.of(new Item(null, "a"), new Item(null, "b")));
+        List<Item> created = service.createAll(
+                List.of(new Item(null, "a"), new Item(null, "b")));
         Item additionalItem = new Item(null, "c");
 
         assertEquals(List.of(new Item(1L, "a"), new Item(2L, "b")), created);
         assertEquals(created, service.notified);
-        assertThrows(UnsupportedOperationException.class, () -> created.add(additionalItem));
+        assertThrows(UnsupportedOperationException.class,
+                () -> created.add(additionalItem));
     }
 
     @Test
@@ -107,9 +116,11 @@ class CreationServiceTest {
 
     @Test
     void createAllIsAllOrNothingAndReportsAllViolations() {
-        List<Item> input = List.of(new Item(null, "a"), new Item(null, ""), new Item(null, " a "), new Item(null, null));
+        List<Item> input = List.of(new Item(null, "a"), new Item(null, ""),
+                new Item(null, " a "), new Item(null, null));
 
-        CreationException ex = assertThrows(CreationException.class, () -> service.createAll(input));
+        CreationException ex = assertThrows(CreationException.class,
+                () -> service.createAll(input));
 
         assertEquals(List.of(
                 "[1] name is required",
@@ -122,8 +133,10 @@ class CreationServiceTest {
     @Test
     void createAllRejectsNullCollectionOrElement() {
         List<Item> itemsWithNull = Arrays.asList(new Item(null, "a"), null);
-        assertThrows(NullPointerException.class, () -> service.createAll(null));
-        assertThrows(NullPointerException.class, () -> service.createAll(itemsWithNull));
+        assertThrows(NullPointerException.class,
+                () -> service.createAll(null));
+        assertThrows(NullPointerException.class,
+                () -> service.createAll(itemsWithNull));
         assertTrue(service.store.isEmpty());
     }
 
@@ -131,7 +144,7 @@ class CreationServiceTest {
     void persistReturningNullIsRejected() {
         CreationService<Item> broken = new CreationService<>() {
             @Override
-            protected Item persist(Item entity) {
+            protected Item persist(final Item entity) {
                 return null;
             }
         };
@@ -139,46 +152,50 @@ class CreationServiceTest {
         Item item = new Item(null, "a");
         List<Item> items = List.of(item);
         assertThrows(IllegalStateException.class, () -> broken.create(item));
-        assertThrows(IllegalStateException.class, () -> broken.createAll(items));
+        assertThrows(IllegalStateException.class,
+                () -> broken.createAll(items));
     }
 
     @Test
     void persistAllReturningWrongSizeIsRejected() {
         CreationService<Item> broken = new CreationService<>() {
             @Override
-            protected Item persist(Item entity) {
+            protected Item persist(final Item entity) {
                 return entity;
             }
 
             @Override
-            protected List<Item> persistAll(List<Item> entities) {
+            protected List<Item> persistAll(final List<Item> entities) {
                 return List.of();
             }
         };
 
         List<Item> items = List.of(new Item(null, "a"));
-        assertThrows(IllegalStateException.class, () -> broken.createAll(items));
+        assertThrows(IllegalStateException.class,
+                () -> broken.createAll(items));
     }
 
     @Test
     void constructorRejectsNullValidationService() {
-        assertThrows(NullPointerException.class, () -> new CreationService<String>(null) {
-            @Override
-            protected String persist(String entity) {
-                return entity;
-            }
-        });
+        assertThrows(NullPointerException.class,
+                () -> new CreationService<String>(null) {
+                    @Override
+                    protected String persist(final String entity) {
+                        return entity;
+                    }
+                });
     }
 
     @Test
     void defaultHooksAcceptEntityAsIs() {
         CreationService<String> defaultService = new CreationService<>() {
             @Override
-            protected String persist(String entity) {
+            protected String persist(final String entity) {
                 return entity;
             }
         };
 
-        assertEquals(List.of("x", "x"), defaultService.createAll(List.of("x", "x")));
+        assertEquals(List.of("x", "x"),
+                defaultService.createAll(List.of("x", "x")));
     }
 }

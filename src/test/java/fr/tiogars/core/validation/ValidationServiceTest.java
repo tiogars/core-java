@@ -13,16 +13,17 @@ class ValidationServiceTest {
 
     static class NameValidationService extends ValidationService<String> {
         @Override
-        protected List<String> check(String entity) {
+        protected List<String> check(final String entity) {
             return entity.isBlank() ? List.of("name is required") : null;
         }
 
         @Override
-        protected Object uniqueKey(String entity) {
+        protected Object uniqueKey(final String entity) {
             return entity.isBlank() ? null : entity;
         }
     }
 
+    /** Validator reused by the test cases. */
     private final NameValidationService service = new NameValidationService();
 
     @Test
@@ -38,7 +39,8 @@ class ValidationServiceTest {
 
     @Test
     void validateAllPrefixesViolationsWithIndexAndReportsDuplicates() {
-        List<String> violations = service.validateAll(List.of("a", "", "a", "b", "b"));
+        List<String> violations = service.validateAll(
+            List.of("a", "", "a", "b", "b"));
 
         assertEquals(List.of(
                 "[1] name is required",
@@ -48,9 +50,11 @@ class ValidationServiceTest {
 
     @Test
     void validateAllRejectsNullListOrElement() {
-        assertThrows(NullPointerException.class, () -> service.validateAll(null));
+        assertThrows(NullPointerException.class,
+            () -> service.validateAll(null));
         List<String> entitiesWithNull = Arrays.asList("a", null);
-        assertThrows(NullPointerException.class, () -> service.validateAll(entitiesWithNull));
+        assertThrows(NullPointerException.class,
+            () -> service.validateAll(entitiesWithNull));
     }
 
     @Test
