@@ -42,6 +42,8 @@ mvn clean package
 mvn clean site
 ```
 
+Le site Maven inclut les pages navigables des sources Java et des tests (`Source Xref` et `Test Source Xref`).
+
 Le workflow [Deploy Maven Site to GitHub Pages](.github/workflows/maven-site.yml) publie le site Maven lors d'un push sur `main` ou d'un lancement manuel. Il transmet `target/site` aux actions officielles GitHub Pages, puis le déploie dans l'environnement `github-pages`, sans utiliser de branche `gh-pages`. Dans les paramètres Pages du dépôt, la source doit être **GitHub Actions**. Si la génération du site échoue, le déploiement n'est pas lancé.
 
 Consulter les [instructions de contribution](CONTRIBUTING.md) et les [règles de développement](AGENTS.md). La documentation doit être actualisée avec chaque évolution de la bibliothèque.
